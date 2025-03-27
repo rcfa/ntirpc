@@ -119,11 +119,18 @@ target_link_libraries(ntirpc ntirpc_lttng)
 endif(USE_LTTNG)
 
 # set library version and symbol namespace(s) from gen'd map file
-set_target_properties(ntirpc PROPERTIES LINK_FLAGS
-	"-Wl,--version-script=${PROJECT_BINARY_DIR}/libntirpc.map"
-  VERSION ${NTIRPC_VERSION}
-  SOVERSION "${NTIRPC_MAJOR_VERSION}${NTIRPC_MINOR_VERSION}"
-  )
+if (NOT APPLE)
+    set_target_properties(ntirpc PROPERTIES LINK_FLAGS
+        "-Wl,--version-script=${PROJECT_BINARY_DIR}/libntirpc.map"
+      VERSION ${NTIRPC_VERSION}
+      SOVERSION "${NTIRPC_MAJOR_VERSION}${NTIRPC_MINOR_VERSION}"
+    )
+else()
+    set_target_properties(ntirpc PROPERTIES
+      VERSION ${NTIRPC_VERSION}
+      SOVERSION "${NTIRPC_MAJOR_VERSION}${NTIRPC_MINOR_VERSION}"
+    )
+endif()
 
 install(TARGETS ntirpc DESTINATION ${LIB_INSTALL_DIR})
 

@@ -2,7 +2,7 @@
 
 # Current version as of Fedora 16.  Not tested with earlier.
 
-cmake_minimum_required(VERSION 2.6.3)
+cmake_minimum_required(VERSION 3.10)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
@@ -35,6 +35,7 @@ set(NTIRPC_ABI_EMBED "${NTIRPC_MAJOR_VERSION}${NTIRPC_MINOR_VERSION}" PARENT_SCO
 set( PACKNAME "${NTIRPC_VERSION}" )
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_MACOSX_RPATH ON)  # Fix RPATH warning
 
 # Install destination, if built standalone
 get_property(USE_LIB64 GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS)
@@ -192,6 +193,26 @@ endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 check_include_files(stdbool.h HAVE_STDBOOL_H)
 check_include_files(strings.h HAVE_STRINGS_H)
 check_include_files(string.h HAVE_STRING_H)
+
+if (APPLE)
+    set(HAVE_STRLCAT 1)
+    set(HAVE_STRLCPY 1)
+    set(HAVE_KRB5 1)
+    set(_HAVE_GSSAPI 1)
+else()
+    check_function_exists(strlcat HAVE_STRLCAT)
+    check_function_exists(strlcpy HAVE_STRLCPY)
+    option(USE_GSS "enable RPCSEC_GSS support" ON)
+    if (USE_GSS)
+        find_package(Krb5 REQUIRED gssapi)
+        if (KRB5_FOUND)
+            set(HAVE_KRB5 ON)
+            set(_HAVE_GSSAPI ON)
+        else()
+            set(USE_GSS OFF)
+        endif()
+    endif()
+endif()
 
 TEST_BIG_ENDIAN(BIGENDIAN)
 if(${BIGENDIAN})
